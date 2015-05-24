@@ -4,50 +4,35 @@ Data Journalism
 Conversie van CBP gegevens van JSON naar RDF
 --------------------------------------------
 
-  1.  Compile the latest version of **SWI-Prolog**:
+  1.  Compileer de laatste versie van **SWI-Prolog**:
       ```bash
       $ git clone https://github.com/SWI-Prolog/swipl-devel.git
       $ cd swipl-devel
       $ ./build
       ```
   
-  2.  Download the latest version of **Data-Journalism**:
+  2.  Download de laatste versie van **Data-Journalism**:
       ```bash
       $ git clone https://github.com/wouterbeek/Data-Journalism.git
       $ cd Data-Journalism
       $ git submodule update --init
       ```
       
-  3.  Place the data file in location `.../Data-Journalism/data/cbp.tar.gz`.
+  3.  Plaats het data bestand in locatie `.../Data-Journalism/data/cbp.tar.gz`.
   
-  4.  Run the conversion script with
+  4.  Draai het conversie script met:
       ```bash
       $ swipl run.pl
+      ?- convert_cbp.
       ```
   
-  Het Linked Data bestand is nu te vinden onder
-  `.../Data-Journalism/data/cbp.rdf`.
-
-Inladen in ClioPatria
----------------------
-
-  1.  Download and configure the latest version of **ClioPatria**:
-      ```bash
-      $ git clone https://github.com/ClioPatria/ClioPatria.git
-      $ cd ClioPatria
-      $ ./configure
-      ```
-  
-  2.  Load the data into **ClioPatria**:
-      $ ./run
-      ?- rdf_load('data/cbp.rdf').
-      ```
+  Het Linked Data bestand is nu te vinden in locatie
+  `.../Data-Journalism/data/cbp.nt.gz`.
 
 
-Remarks about the conversion
-----------------------------
 
-Ik documenteer nog even wat details van wat ik tijdens de data conversie ben tegengekomen:
+Opmerkingen over de conversie
+-----------------------------
 
   * De data bestaat --- ontologisch gezien --- uit twee klassen: meldingen en agenten. Agenten kunnen melders, betrokkenen, verantwoordelijken, of ontvangers zijn. De subklassen waartoe een agent behoord worden geinduceerd door in de data aanwezige relaties (zie mijn volgende punt).
 
