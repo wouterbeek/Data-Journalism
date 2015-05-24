@@ -21,3 +21,4 @@ user:project(dj, "Data Journalism").
 
 
 :- use_module(dj(cbp)).
+:- use_module(dj(test)).

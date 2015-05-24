@@ -1,9 +1,9 @@
-:- module(cbp, [load/0]).
+:- module(cbp, [convert_cbp/0]).
 
 /** <module> CBP
 
 @author Wouter Beek
-@version 2015/05/23
+@version 2015/05/23-2015/05/24
 */
 
 :- use_module(library(apply)).
@@ -15,33 +15,48 @@
 
 :- use_module(plc(dcg/dcg_pl_term)).
 :- use_module(plc(generics/code_ext)).
+:- use_module(plc(generics/error_ext)).
 
 :- use_module(plRdf(api/rdf_build)).
 :- use_module(plRdf(api/rdfs_build)).
+:- use_module(plRdf(management/rdf_save_any)).
 
 :- rdf_register_prefix(cbpo, 'http://www.cbp.nl/ontology/').
 :- rdf_register_prefix(cbpr, 'http://www.cbp.nl/resource/').
 
-load:-
-  thread_create(load(cbp), _, [detached(true)]).
+convert_cbp:-
+  thread_create(convert_cbp(cbp), _, [detached(true)]).
 
-load(G):-
+convert_cbp(G):-
   reset_progress,
-  absolute_file_name(data('cbp.tar.gz'), File, [access(read)]),
-  setup_call_cleanup(
-    archive_open(File, Archive, []),
-    load_archive(Archive, G),
-    archive_close(Archive)
-  ).
+  print_message(information, convert_cbp(started)),
 
-load_archive(Archive, G):-
-  repeat,
-  archive_data_stream(Archive, In, [meta_data([H|_])]),
-  call_cleanup(
-    load_stream(In, H.name, G),
-    close(In)
+  % Input file.
+  absolute_file_name(data('cbp.tar.gz'), InFile, [access(read)]),
+  setup_call_catcher_cleanup(
+    archive_open(InFile, Archive, []),
+    (
+      repeat,
+      (   archive_data_stream(Archive, In, [meta_data([H|_])])
+      ->  call_cleanup(
+            load_stream(In, H.name, G),
+            close(In)
+          ),
+          fail
+      ;   !
+      )
+    ),
+    Catcher,
+    (   archive_close(Archive),
+        handle_catcher(Catcher)
+    )
   ),
-  fail.
+
+  % Output file.
+  absolute_file_name(data('cbp.nt.gz'), OutFile, [access(write)]),
+  rdf_save_any(file(OutFile), [format(ntriples),graph(cbp),compress(gzip)]),
+  
+  print_message(information, convert_cbp(ended)).
 
 load_stream(In, LocalName, G):-
   file_name_extension(_, Ext, LocalName),
@@ -59,7 +74,7 @@ assert_entry(D, G):-
   cbp_agent(D.name, Agent, G),
   dict_pairs(D.meldingen, _, Pairs),
   maplist(\Pair^assert_melding_pair(Agent, Pair, G), Pairs), !,
-  print_progress.
+  print_progress(100, G).
 assert_entry(D, G):-
   gtrace,
   print_dict(D),
@@ -137,8 +152,13 @@ print_dict(D):-
 print_pair(N-V):-
   format(current_output, '~w\t=\t~w\n', [N,V]).
 
-print_progress:-
-  flag(cbp_entries, N, N + 1).
+print_progress(Step, G):-
+  flag(cbp_entries, N, N + 1),
+  (   N mod Step =:= 0,
+      N > 0
+  ->  print_message(information, entries_converted(N, G))
+  ;   true
+  ).
 
 reset_progress:-
   flag(cbp_entries, _, 0).
@@ -164,5 +184,10 @@ string_atom_term(T, T).
 
 :- multifile(prolog:message//1).
 
+prolog:message(convert_cbp(PastTense)) -->
+  ['CBP coversion ~a.'-[PastTense]].
+prolog:message(entries_converted(N, G)) -->
+  {rdf_statistics(triples_by_graph(G,T))},
+  ['~D entries have been converted into ~D triples.'-[N,T]].
 prolog:message(non_json_entry(LocalName)) -->
   ['Entry ',LocalName,' does not have the JSON file extension.'].
