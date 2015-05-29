@@ -1,5 +1,10 @@
-Data Journalism
-===============
+CBP data
+--------
+
+De data kan bevraagd worden middels [SPARQL](http://cliopatria.lodlaundromat.d2s.labs.vu.nl/yasgui/index.html) en [SWISH](http://cliopatria.lodlaundromat.d2s.labs.vu.nl/swish/).
+
+CBP vocabulair
+--------------
 
 ![](https://raw.githubusercontent.com/wouterbeek/Data-Journalism/master/cbpo.png)
   
@@ -23,6 +28,7 @@ De volgende prefixes worden gebruikt om de namen af te korten:
 | `rdfs`    | [http://www.w3.org/2000/01/rdf-schema#](http://www.w3.org/2000/01/rdf-schema#) |
 | `vcard`   | [http://www.w3.org/2006/vcard/ns#](http://www.w3.org/2006/vcard/ns#)           |
 | `xsd`     | [http://www.w3.org/2001/XMLSchema#](http://www.w3.org/2001/XMLSchema#)         |
+
 
 
 Conversie van CBP gegevens van JSON naar RDF
