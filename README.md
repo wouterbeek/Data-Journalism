@@ -53,7 +53,7 @@ Conversie van CBP gegevens van JSON naar RDF
   4.  Draai het conversie script met:
       ```bash
       $ swipl run.pl
-      ?- convert_cbp.
+      ?- cbp_script.
       ```
   
   Het Linked Data bestand is nu te vinden in locatie
