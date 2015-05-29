@@ -6,7 +6,7 @@ De data kan bevraagd worden middels [SPARQL](http://cliopatria.lodlaundromat.d2s
 CBP vocabulair
 --------------
 
-![](https://raw.githubusercontent.com/wouterbeek/Data-Journalism/master/cbpo.png)
+![](https://raw.githubusercontent.com/wouterbeek/Data-Journalism/master/cbp/cbpo.png)
   
 Bovenstaande graaf laat het vocabulair van de CBP dataset zien.
 
