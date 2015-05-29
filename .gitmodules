@@ -28,3 +28,6 @@
 [submodule "plXsd"]
 	path = plXsd
 	url = https://github.com/wouterbeek/plXsd.git
+[submodule "plSparql"]
+	path = plSparql
+	url = https://github.com/wouterbeek/plSparql.git

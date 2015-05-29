@@ -1,13 +1,14 @@
-:- module(cbp, [convert_cbp/0]).
+:- module(cbp, [convert_cbp/0, convert_cbp/1]).
 
 /** <module> CBP
 
 @author Wouter Beek
-@version 2015/05/23-2015/05/24
+@version 2015/05/23
 */
 
 :- use_module(library(apply)).
 :- use_module(library(archive)).
+:- use_module(library(debug)).
 :- use_module(library(http/json)).
 :- use_module(library(lambda)).
 :- use_module(library(semweb/rdf_db), except([rdf_node/1])).
@@ -19,17 +20,12 @@
 
 :- use_module(plRdf(api/rdf_build)).
 :- use_module(plRdf(api/rdfs_build)).
-:- use_module(plRdf(management/rdf_save_any)).
-
-:- rdf_register_prefix(cbpo, 'http://www.cbp.nl/ontology/').
-:- rdf_register_prefix(cbpr, 'http://www.cbp.nl/resource/').
 
 convert_cbp:-
   thread_create(convert_cbp(cbp), _, [detached(true)]).
 
 convert_cbp(G):-
   reset_progress,
-  print_message(information, convert_cbp(started)),
 
   % Input file.
   absolute_file_name(data('cbp.tar.gz'), InFile, [access(read)]),
@@ -50,19 +46,13 @@ convert_cbp(G):-
     (   archive_close(Archive),
         handle_catcher(Catcher)
     )
-  ),
-
-  % Output file.
-  absolute_file_name(data('cbp.nt.gz'), OutFile, [access(write)]),
-  rdf_save_any(file(OutFile), [format(ntriples),graph(cbp),compress(gzip)]),
-  
-  print_message(information, convert_cbp(ended)).
+  ).
 
 load_stream(In, LocalName, G):-
   file_name_extension(_, Ext, LocalName),
   (   Ext == json
   ->  load_json(In, G)
-  ;   print_message(informational, non_json_entry(LocalName))
+  ;   debug(cbp, '~a does not have the JSON file extension.', [LocalName])
   ).
 
 load_json(In, G):-
@@ -156,7 +146,8 @@ print_progress(Step, G):-
   flag(cbp_entries, N, N + 1),
   (   N mod Step =:= 0,
       N > 0
-  ->  print_message(information, entries_converted(N, G))
+  ->  rdf_statistics(triples_by_graph(G,T)),
+      debug(cbp, '~D entries have been converted into ~D triples.', [N,T])
   ;   true
   ).
 
@@ -177,17 +168,3 @@ string_atom_term(S, A):-
   string(S), !,
   atom_string(A, S).
 string_atom_term(T, T).
-
-
-
-% MESSAGES %
-
-:- multifile(prolog:message//1).
-
-prolog:message(convert_cbp(PastTense)) -->
-  ['CBP coversion ~a.'-[PastTense]].
-prolog:message(entries_converted(N, G)) -->
-  {rdf_statistics(triples_by_graph(G,T))},
-  ['~D entries have been converted into ~D triples.'-[N,T]].
-prolog:message(non_json_entry(LocalName)) -->
-  ['Entry ',LocalName,' does not have the JSON file extension.'].

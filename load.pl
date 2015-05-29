@@ -13,12 +13,11 @@ user:project(dj, "Data Journalism").
   plLangTag,
   plRdf,
   plSet,
+  plSparql,
   plTree,
   plUri,
   plXml,
   plXsd
 ]).
 
-
-:- use_module(dj(cbp)).
-:- use_module(dj(test)).
+:- use_module(dj(cbp/cbp_script)).

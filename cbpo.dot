@@ -1,0 +1,28 @@
+digraph G {
+  address [label=<<TABLE>
+		<TR><TD><B>vcard:Address</B></TD></TR>
+		<TR><TD>vcard:locality xsd:string</TD></TR>
+		<TR><TD>vcard:postal-code xsd:string</TD></TR>
+		<TR><TD>vcard:streetAddress xsd:string</TD></TR>
+		</TABLE>>,shape="none"];
+  agent [label=<<TABLE>
+		<TR><TD><B>foaf:Agent</B></TD></TR>
+		<TR><TD>rdfs:label xsd:string</TD></TR>
+		</TABLE>>,shape="none"];
+  melding [label=<<TABLE>
+		<TR><TD><B>cbpo:Melding</B></TD></TR>
+		<TR><TD>cbpo:doel xsd:string</TD></TR>
+		<TR><TD>cbpo:doorgifteBuitenEU xsd:boolean [OPT]</TD></TR>
+		<TR><TD>cbpo:id xsd:string</TD></TR>
+		<TR><TD>cbpo:naamVerwerking xsd:string</TD></TR>
+		<TR><TD>dcterms:description xsd:string</TD></TR>
+		</TABLE>>,shape="none"];
+
+  agent -> address [label="cbpo:bezoekAdres"];
+  agent -> address [label="cbpo:postAdres [OPT]"];
+
+  melding -> agent [label="cbpo:betrokkene"];
+  melding -> agent [label="cbpo:melder"];
+  melding -> agent [label="cbpo:ontvanger"];
+  melding -> agent [label="cbpo:verantwoordelijke"];
+}
