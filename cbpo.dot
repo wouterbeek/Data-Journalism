@@ -21,8 +21,8 @@ digraph G {
   agent -> address [label="cbpo:bezoekAdres"];
   agent -> address [label="cbpo:postAdres [OPT]"];
 
-  melding -> agent [label="cbpo:betrokkene"];
+  melding -> agent [label="cbpo:betrokkene [OPT]"];
   melding -> agent [label="cbpo:melder"];
-  melding -> agent [label="cbpo:ontvanger"];
+  melding -> agent [label="cbpo:ontvanger [OPT]"];
   melding -> agent [label="cbpo:verantwoordelijke"];
 }

@@ -4,7 +4,16 @@ Data Journalism
 ![](https://raw.githubusercontent.com/wouterbeek/Data-Journalism/master/cbpo.png)
   
 Bovenstaande graaf laat het vocabulair van de CBP dataset zien.
-De volgende prefixes worden gebruikt om de named af te korten:
+
+De blokken representeren de basis entiteiten: meldingen, agenten, adressen.
+
+Relaties tussen de basis entiteiten zijn weergegeven met gelabelde pijlen.
+
+Eigenschappen van de basis entiteiten zijn binnen de afzonderlijke blokken weergegeven (naam van de eigenschap, gevolgd door datatype).
+
+Optionele relaties/eigenschappen zijn aangeduid met `[OPT]`.
+
+De volgende prefixes worden gebruikt om de namen af te korten:
 
 | Prefix    | Expansion                                                                      |
 |:--------- |:------------------------------------------------------------------------------ |
