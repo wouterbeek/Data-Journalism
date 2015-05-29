@@ -1,17 +1,19 @@
 Data Journalism
 ===============
 
-![]()
+![](https://raw.githubusercontent.com/wouterbeek/Data-Journalism/master/cbpo.png)
   
 Bovenstaande graaf laat het vocabulair van de CBP dataset zien.
 De volgende prefixes worden gebruikt om de named af te korten:
 
-| `cbpo`    | [http://www.cbp.nl/ontology/](http://www.cbp.nl/ontology/) |
-| `dcterms` | [http://purl.org/dc/terms/](http://purl.org/dc/terms/)     |
-| `foaf`    | [http://xmlns.com/foaf/0.1/](http://xmlns.com/foaf/0.1/)   |
-| `rdfs`    | [http://www.w3.org/2000/01/rdf-schema#](http://www.w3.org/2000/01/rdf-schema#)
-| `vcard`   | [http://www.w3.org/2006/vcard/ns#](http://www.w3.org/2006/vcard/ns#)
-| `xsd`     | [http://www.w3.org/2001/XMLSchema#](http://www.w3.org/2001/XMLSchema#) |
+| Prefix    | Expansion                                                                      |
+|:--------- |:------------------------------------------------------------------------------ |
+| `cbpo`    | [http://www.cbp.nl/ontology/](http://www.cbp.nl/ontology/)                     |
+| `dcterms` | [http://purl.org/dc/terms/](http://purl.org/dc/terms/)                         |
+| `foaf`    | [http://xmlns.com/foaf/0.1/](http://xmlns.com/foaf/0.1/)                       |
+| `rdfs`    | [http://www.w3.org/2000/01/rdf-schema#](http://www.w3.org/2000/01/rdf-schema#) |
+| `vcard`   | [http://www.w3.org/2006/vcard/ns#](http://www.w3.org/2006/vcard/ns#)           |
+| `xsd`     | [http://www.w3.org/2001/XMLSchema#](http://www.w3.org/2001/XMLSchema#)         |
 
 
 Conversie van CBP gegevens van JSON naar RDF
