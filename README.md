@@ -1,8 +1,3 @@
-CBP data
---------
-
-De data kan bevraagd worden middels [SPARQL](http://cliopatria.lodlaundromat.d2s.labs.vu.nl/yasgui/index.html) en [SWISH](http://cliopatria.lodlaundromat.d2s.labs.vu.nl/swish/).
-
 CBP vocabulair
 --------------
 
