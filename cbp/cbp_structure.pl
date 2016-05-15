@@ -1,32 +1,32 @@
 :- module(
   cbp_structure,
   [
-    structure_postcodes/1 % +CbpGraph:atom
+    structure_postcodes/1 % +CbpG
   ]
 ).
 
 /** <module> Add structure to CBP data
 
 @author Wouter Beek
-@version 2015/05/29
+@version 2015/05/29, 2016/05
 */
 
+:- use_module(library(atom_ext).
+:- use_module(library(dcg/dcg_ext)).
 :- use_module(library(debug)).
-:- use_module(library(semweb/rdf_db), except([rdf_node/1])).
+:- use_module(library(rdf/rdf_ext)).
+:- use_module(library(semweb/rdf11)).
 
-:- use_module(plc(generics/atom_ext)).
-:- use_module(plc(dcg/dcg_content)).
-:- use_module(plc(dcg/dcg_generics)).
 
-:- use_module(plRdf(api/rdf_build)).
-:- use_module(plRdf(api/rdf_read)).
 
-%! structure_postcodes(+Graph:atom) is det.
+
+
+%! structure_postcodes(+G) is det.
 % Adds more structure to CBP postcodes.
 %
 % For example [1] is converted to [2]:
 %
-% ```
+% ```turtle
 % [1]   Zutphenseweg 51\n7418AH DEVENTER\nNederland
 % [2]   _:1 a                   vcard:Address ;
 %           vcard:streetAddress "Zutphenseweg 51"^^xsd:string ;
@@ -34,27 +34,32 @@
 %           vcard:postal-code   "7418AH"^^xsd:string .
 % ```
 
-structure_postcodes(G):-
+structure_postcodes(G) :-
   flag(number_of_structured_postcodes, _, 0), %DEB
-  rdf_string(Agent, cbpo:bezoekAdres, String, G), %NONDET
+  rdf(Agent, cbpo:bezoekAdres, String^^xsd:string, G), %NONDET
   rdf_retractall(Agent, cbpo:bezoekAdres, _, G),
   create_postcode(Agent, String, G),
   flag(number_of_structured_postcodes, N, N + 1), %DEB
-  debug(cbp, 'Structured ~D postcodes.', [N]), %DEB
+  debug(cbp, "Structured ~D postcodes.", [N]), %DEB
   fail.
 structure_postcodes(_).
 
-%! create_postcode(+Agent:iri, +String:atom, +Graph:atom) is det.
 
-create_postcode(Agent, String, G):-
+
+%! create_postcode(+Agent, +String, +G) is det.
+
+create_postcode(Agent, String, G) :-
   once(atom_phrase(postcode(StreetAddress, Locality, PostalCode), String)),
-  rdf_create_next_resource(cbpr, [], vcard:'Address', G, Address),
+  rdf_create_iri(cbpr, Address),
+  rdf_assert_instance(Address, vcard:'Address', G),
   rdf_assert(Agent, cbpo:bezoekAdres, Address, G),
-  rdf_assert_string(Address, vcard:streetAddress, StreetAddress, G),
-  rdf_assert_string(Address, vcard:locality, Locality, G),
-  rdf_assert_string(Address, vcard:'postal-code', PostalCode, G).
+  rdf_assert(Address, vcard:streetAddress, StreetAddress^^xsd:string, G),
+  rdf_assert(Address, vcard:locality, Locality^^xsd:string, G),
+  rdf_assert(Address, vcard:'postal-code', PostalCode^^xsd:string, G).
 
-%! postcode(-StreetAddress:atom, -Locality:atom, -PostalCode:atom)// is det.
+
+
+%! postcode(-StreetAddress, -Locality, -PostalCode)// is det.
 
 postcode(StreetAddress, Locality, PostalCode) -->
   % Street address.
@@ -67,7 +72,11 @@ postcode(StreetAddress, Locality, PostalCode) -->
 
   % Locality.
   '...'(Cs3), "\n", !,
-  {atom_codes(A1, Cs3), downcase_atom(A1, A2), capitalize_atom(A2, Locality)},
+  {
+    atom_codes(A1, Cs3),
+    downcase_atom(A1, A2),
+    capitalize_atom(A2, Locality)
+  },
 
   % Rest.
   '...'.

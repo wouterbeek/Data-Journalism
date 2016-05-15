@@ -3,168 +3,118 @@
 /** <module> CBP
 
 @author Wouter Beek
-@version 2015/05/23
+@version 2015/05/23, 2016/05
 */
 
 :- use_module(library(apply)).
-:- use_module(library(archive)).
 :- use_module(library(debug)).
-:- use_module(library(http/json)).
-:- use_module(library(lambda)).
-:- use_module(library(semweb/rdf_db), except([rdf_node/1])).
+:- use_module(library(dict_ext)).
+:- use_module(library(http/http_download)).
+:- use_module(library(print_ext)).
+:- use_module(library(rdf/rdf_ext)).
+:- use_module(library(rdfs/rdfs_ext)).
+:- use_module(library(semweb/rdf11)).
 :- use_module(library(semweb/rdfs)).
+:- use_module(library(yall)).
 
-:- use_module(plc(dcg/dcg_pl_term)).
-:- use_module(plc(generics/code_ext)).
-:- use_module(plc(generics/error_ext)).
 
-:- use_module(plRdf(api/rdf_build)).
-:- use_module(plRdf(api/rdfs_build)).
+
+
 
 convert_cbp:-
   thread_create(convert_cbp(cbp), _, [detached(true)]).
 
-convert_cbp(G):-
-  reset_progress,
+
+convert_cbp(G) :-
+  % Reset progress tracker.
+  flag(cbp_entries, _, 0),
 
   % Input file.
-  absolute_file_name(data('cbp.tar.gz'), InFile, [access(read)]),
-  setup_call_catcher_cleanup(
-    archive_open(InFile, Archive, []),
-    (
-      repeat,
-      (   archive_data_stream(Archive, In, [meta_data([H|_])])
-      ->  call_cleanup(
-            load_stream(In, H.name, G),
-            close(In)
-          ),
-          fail
-      ;   !
-      )
-    ),
-    Catcher,
-    (   archive_close(Archive),
-        handle_catcher(Catcher)
-    )
+  absolute_file_name(data('cbp.tar.gz'), File, [access(read)]),
+  forall(json_download(File, Json),
+    maplist({G}/[Entry]>>assert_entry(Entry, G), Json)
   ).
 
-load_stream(In, LocalName, G):-
-  file_name_extension(_, Ext, LocalName),
-  (   Ext == json
-  ->  load_json(In, G)
-  ;   debug(cbp, '~a does not have the JSON file extension.', [LocalName])
-  ).
 
-load_json(In, G):-
-  json_read_dict0(In, D),
-  maplist(\Entry^assert_entry(Entry, G), D).
 
 % @tbd Assert entry.
-assert_entry(D, G):-
+assert_entry(D, G) :-
   cbp_agent(D.name, Agent, G),
-  dict_pairs(D.meldingen, _, Pairs),
-  maplist(\Pair^assert_melding_pair(Agent, Pair, G), Pairs), !,
+  dict_pairs(D.meldingen, Pairs),
+  maplist({Agent,G}/[Pair]>>assert_melding_pair(Agent, Pair, G), Pairs), !,
   print_progress(100, G).
-assert_entry(D, G):-
+assert_entry(D, G) :-
   gtrace,
   print_dict(D),
   assert_entry(D, G).
 
-assert_melding_pair(Agent, Id-D, G):-
-  rdf_create_next_resource(cbpr, [], cbpo:'Melding', G, Melding),
-  rdf_assert_string(Melding, cbpo:id, Id, G),
+
+
+assert_melding_pair(Agent, Id-D, G) :-
+  rdf_create_iri(cbpr, Melding),
+  rdf_assert_instance(Melding, cbpo:'Melding', G),
+  rdf_assert(Melding, cbpo:id, Id^^xsd:string, G),
   rdf_assert(Melding, cbpo:melder, Agent, G),
   ignore(assert_betrokkene(Melding, D.get(betrokkenen), G)),
-  rdf_assert_langstring(Melding, dcterms:description, [nl]-D.description, G),
-  maplist(\Doel^assert_doel(Melding, Doel, G), D.doelen),
-  ignore(
-    rdf_assert_typed_literal(
-      Melding,
-      cbpo:doorgifteBuitenEU,
-      D.doorgifte_buiten_eu,
-      xsd:boolean,
-      G
-    )
-  ),
+  rdf_assert(Melding, dcterms:description, D.description@nl, G),
+  maplist({Melding,G}/[Doel]>>assert_doel(Melding, Doel, G), D.doelen),
+  ignore(rdf_assert(Melding, cbpo:doorgifteBuitenEU, D.doorgifte_buiten_eu^^xsd:boolean, G)),
   rdf_assert_string(Melding, cbpo:naamVerwerking, D.naam_verwerking, G),
-  ignore(
-    maplist(
-      \Ontvanger^assert_ontvanger(Melding, Ontvanger, G),
-      D.get(ontvangers)
-    )
-  ),
-  maplist(
-    \Verantwoordelijke^assert_verantwoordelijke(Melding, Verantwoordelijke, G),
-    D.verantwoordelijken
-  ).
+  ignore(maplist({Melding,G}/[Ontvanger]>>assert_ontvanger(Melding, Ontvanger, G), D.get(ontvangers))),
+  maplist({Melding,G}/[Verantw]>>assert_verantwoordelijke(Melding, Verantw, G), D.verantwoordelijken).
 
-assert_betrokkene(Melding, D, G):-
-  dict_pairs(D, _, Pairs),
-  maplist(\Pair^assert_betrokkene_pair(Melding, Pair, G), Pairs).
+
+
+assert_betrokkene(Melding, D, G) :-
+  dict_pairs(D, Pairs),
+  maplist({Melding,G}/[Pair]>>assert_betrokkene_pair(Melding, Pair, G), Pairs).
+
+
 
 % @tbd Assert properties.
-assert_betrokkene_pair(Melding, Betrokkene-_Properties, G):-
+assert_betrokkene_pair(Melding, Betrokkene-_Properties, G) :-
   cbp_agent(Betrokkene, Agent, G),
   rdf_assert(Melding, cbpo:betrokkene, Agent, G).
 
-assert_doel(Melding, Doel, G):-
-  rdf_assert_string(Melding, cbpo:doel, Doel, G).
 
-assert_ontvanger(Melding, Ontvanger, G):-
+
+assert_doel(Melding, Doel, G) :-
+  rdf_assert(Melding, cbpo:doel, Doel^^xsd:string, G).
+
+
+
+assert_ontvanger(Melding, Ontvanger, G) :-
   cbp_agent(Ontvanger, Agent, G),
   rdf_assert(Melding, cbpo:ontvanger, Agent, G).
 
-assert_verantwoordelijke(Melding, D, G):-
+
+
+assert_verantwoordelijke(Melding, D, G) :-
   cbp_agent(D.'Naam', Agent, G),
-  rdf_assert_string(Agent, cbpo:bezoekAdres, D.'Bezoekadres', G),
-  ignore(rdf_assert_string(Agent, cbpo:postAdres, D.get('Postadres'), G)),
+  rdf_assert(Agent, cbpo:bezoekAdres, D.'Bezoekadres'^^xsd:string, G),
+  ignore(rdf_assert(Agent, cbpo:postAdres, D.get('Postadres')^^xsd:string, G)),
   rdf_assert(Melding, cbpo:verantwoordelijke, Agent, G).
 
-cbp_agent(Name, Agent, _):-
+
+
+cbp_agent(Name, Agent, _) :-
   rdfs_pref_label(Agent, Name), !.
-cbp_agent(Name, Agent, G):-
-  rdf_create_next_resource(cbpr, [], foaf:'Agent', G, Agent),
-  rdfs_assert_label(Agent, [nl]-Name, G).
+cbp_agent(Name, Agent, G) :-
+  rdf_create_iri(cbpr, Agent),
+  rdf_assert_instance(Agent, foaf:'Agent', G),
+  rdfs_assert_label(Agent, Name@nl, G).
 
 
 
-%  HELPERS %
 
-json_read_dict0(In, D):-
-  json_read_dict(In, D0),
-  string_atom_term(D0, D).
 
-print_dict(D):-
-  phrase(dcg_pl_term(D), Cs),
-  put_codes(Cs),
-  nl.
+% DEBUG %
 
-print_pair(N-V):-
-  format(current_output, '~w\t=\t~w\n', [N,V]).
-
-print_progress(Step, G):-
+print_progress(Step, G) :-
   flag(cbp_entries, N, N + 1),
   (   N mod Step =:= 0,
       N > 0
   ->  rdf_statistics(triples_by_graph(G,T)),
-      debug(cbp, '~D entries have been converted into ~D triples.', [N,T])
+      debug(cbp, "~D entries have been converted into ~D triples.", [N,T])
   ;   true
   ).
-
-reset_progress:-
-  flag(cbp_entries, _, 0).
-
-string_atom_term(N1-V1, N2-V2):- !,
-  maplist(string_atom_term, [N1,V1], [N2,V2]).
-string_atom_term(L1, L2):-
-  is_list(L1), !,
-  maplist(string_atom_term, L1, L2).
-string_atom_term(D1, D2):-
-  is_dict(D1), !,
-  dict_pairs(D1, X, L1),
-  maplist(string_atom_term, L1, L2),
-  dict_pairs(D2, X, L2).
-string_atom_term(S, A):-
-  string(S), !,
-  atom_string(A, S).
-string_atom_term(T, T).

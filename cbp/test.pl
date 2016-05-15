@@ -24,56 +24,20 @@ Inladen in ClioPatria
       ```
 */
 
-:- use_module(library(archive)).
-:- use_module(library(http/json)).
-
-:- use_module(plc(dcg/dcg_pl_term)).
-:- use_module(plc(generics/code_ext)).
+:- use_module(library(dict_ext)).
+:- use_module(library(http/http_download)).
+:- use_module(library(os/archive_ext)).
 
 
 
-print_headers:-
+
+
+print_headers :-
   absolute_file_name('data/cbp.tar.gz', File, [access(read)]),
-  setup_call_cleanup(
-    archive_open(File, Archive, []),
-    (
-      repeat,
-      (   archive_next_header(Archive, Entry)
-      ->  format('~w~n', [Entry]),
-          fail
-      ;   !
-      )
-    ),
-    archive_close(Archive)
-  ).
+  archive_info(File).
 
 
-print_streams:-
+
+print_streams :-
   absolute_file_name('data/cbp.tar.gz', File, [access(read)]),
-  setup_call_cleanup(
-    archive_open(File, Archive, []),
-    (
-      repeat,
-      (   archive_data_stream(Archive, In, [meta_data([H|_])])
-      ->  format('~w~n', [H.name]),
-          call_cleanup(
-            (   json_read_dict(In, Dict),
-                print_dict(Dict)
-            ),
-            close(In)
-          ),
-          fail
-      ;   !
-      )
-    ),
-    archive_close(Archive)
-  ).
-
-
-
-% HELPERES %
-
-print_dict(D):-
-  phrase(dcg_pl_term(D), Cs),
-  put_codes(Cs),
-  nl.
+  forall(json_download(File, Json), print_dict(Json)).
