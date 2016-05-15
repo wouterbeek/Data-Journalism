@@ -121,7 +121,7 @@ assert_verantwoordelijke(Melding, D, G):-
   rdf_assert(Melding, cbpo:verantwoordelijke, Agent, G).
 
 cbp_agent(Name, Agent, _):-
-  rdfs_label(Agent, Name), !.
+  rdfs_pref_label(Agent, Name), !.
 cbp_agent(Name, Agent, G):-
   rdf_create_next_resource(cbpr, [], foaf:'Agent', G, Agent),
   rdfs_assert_label(Agent, [nl]-Name, G).
