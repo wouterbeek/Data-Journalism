@@ -14,14 +14,14 @@
 :- use_module(library(atom_ext).
 :- use_module(library(dcg/dcg_ext)).
 :- use_module(library(debug)).
-:- use_module(library(rdf/rdf_ext)).
+:- use_module(library(q/qb)).
 :- use_module(library(semweb/rdf11)).
 
 
 
 
 
-%! structure_postcodes(+G) is det.
+%! structure_postcodes(+M, +G) is det.
 % Adds more structure to CBP postcodes.
 %
 % For example [1] is converted to [2]:
@@ -34,28 +34,28 @@
 %           vcard:postal-code   "7418AH"^^xsd:string .
 % ```
 
-structure_postcodes(G) :-
+structure_postcodes(M, G) :-
   flag(number_of_structured_postcodes, _, 0), %DEB
-  rdf(Agent, cbpo:bezoekAdres, String^^xsd:string, G), %NONDET
+  q(M, Agent, cbpo:bezoekAdres, String^^xsd:string, G), %NONDET
   rdf_retractall(Agent, cbpo:bezoekAdres, _, G),
-  create_postcode(Agent, String, G),
+  create_postcode(M, Agent, String, G),
   flag(number_of_structured_postcodes, N, N + 1), %DEB
   debug(cbp, "Structured ~D postcodes.", [N]), %DEB
   fail.
-structure_postcodes(_).
+structure_postcodes(_, _).
 
 
 
-%! create_postcode(+Agent, +String, +G) is det.
+%! create_postcode(+M, +Agent, +String, +G) is det.
 
-create_postcode(Agent, String, G) :-
+create_postcode(M, Agent, String, G) :-
   once(atom_phrase(postcode(StreetAddress, Locality, PostalCode), String)),
-  rdf_create_iri(cbpr, Address),
-  rdf_assert_instance(Address, vcard:'Address', G),
-  rdf_assert(Agent, cbpo:bezoekAdres, Address, G),
-  rdf_assert(Address, vcard:streetAddress, StreetAddress^^xsd:string, G),
-  rdf_assert(Address, vcard:locality, Locality^^xsd:string, G),
-  rdf_assert(Address, vcard:'postal-code', PostalCode^^xsd:string, G).
+  qq_iri(cbpr, Address),
+  qb_instance(M, Address, vcard:'Address', G),
+  qb(M, Agent, cbpo:bezoekAdres, Address, G),
+  qb(M, Address, vcard:streetAddress, StreetAddress^^xsd:string, G),
+  qb(M, Address, vcard:locality, Locality^^xsd:string, G),
+  qb(M, Address, vcard:'postal-code', PostalCode^^xsd:string, G).
 
 
 

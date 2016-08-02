@@ -16,9 +16,9 @@ Runs a script that loads and enriches the CBP dataset.
 :- use_module(cbp_enrich).
 :- use_module(cbp_structure).
 
-:- rdf_register_prefix(cbpo, 'http://www.cbp.nl/ontology/').
-:- rdf_register_prefix(cbpr, 'http://www.cbp.nl/resource/').
-:- rdf_register_prefix(vcard, 'http://www.w3.org/2006/vcard/ns#').
+:- qb_alias(cbpo, 'http://www.cbp.nl/ontology/').
+:- qb_alias(cbpr, 'http://www.cbp.nl/resource/').
+:- qb_alias(vcard, 'http://www.w3.org/2006/vcard/ns#').
 
 :- meta_predicate
     debug_cbp(:, +, +).
